@@ -1,4 +1,4 @@
-In here there is a script that generates a classification CSV of desired size directly into a set up HDFS (useful when we want to generate data that doesn't fit into the disk of a single machine). Use it with
+In here there is a script that generates a classification dataset CSV (with classification-relevant numerical features and some random categorical features for measuring ETL operations performance) of desired size directly into a set up HDFS (useful when we want to generate data that doesn't fit into the disk of a single machine). Use it with
 
 ```bash
 chmod +x generate_data_to_hdfs.sh
