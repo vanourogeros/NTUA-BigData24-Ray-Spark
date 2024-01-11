@@ -31,16 +31,15 @@ stagemetrics.print_report()
 print(stagemetrics.aggregate_stagemetrics())
 
 # memory report needs a bit of time to run...
-for _ in range(20):
+patience = 20
+while patience > 0:
     try:
         stagemetrics.print_memory_report()
+        patience = -1
     except:
         print("memory report not ready")
         time.sleep(1)
+        patience -= 1
 print("memory report never ready :(")
-#print(stagemetrics.aggregate_stagemetrics())
-# Display the triangle count
-#triangles.show()
-
 # Stop Spark
 sc.stop()
