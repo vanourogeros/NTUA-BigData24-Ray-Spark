@@ -35,7 +35,6 @@ df_grouped = (
     df
     .groupBy("categorical_feature_1")
     .agg(
-        count("categorical_feature_2").alias("count_categorical_feature_2"),
         sum("feature_3").alias("sum_feature_3")
     )
 )
