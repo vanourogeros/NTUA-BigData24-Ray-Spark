@@ -69,14 +69,15 @@ trainer = MultilayerPerceptronClassifier(layers=layers, blockSize=1024, tol=1e-3
 paramGrid =  ParamGridBuilder() \
              .addGrid(trainer.blockSize, [512, 1024]) \
              .addGrid(trainer.layers, [[4, 128, 2], [4, 256, 2]]) \
-             .build() # Specify the values you want to try for maxIter
+             .addGrid(trainer.maxIter, [10]) \
+             .build() 
 
 evaluator = MulticlassClassificationEvaluator(metricName="accuracy")
 
 tvs  = TrainValidationSplit(estimator=trainer,
                            estimatorParamMaps=paramGrid,
                            evaluator=evaluator,
-                           trainRatio=0.8)  # You can adjust the number of folds for cross-validation
+                           trainRatio=0.8)  
 
 # Fit the CrossValidator
 tvModel = tvs.fit(train_df)
