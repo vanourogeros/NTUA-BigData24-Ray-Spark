@@ -6,7 +6,7 @@ from ray.data import Dataset, from_arrow, from_pandas, from_items
 from ray.data.aggregate import AggregateFn
 from functools import partial
 from typing import Iterable, Tuple
-
+import subprocess
 
 def computeContribs(row):
     urls = row['ToNodes']
@@ -22,13 +22,13 @@ def computeContribs(row):
 #ray.init()
 
 # Create a Ray Dataset
-ds = ray.data.from_pandas(
-   pd.DataFrame(
-       {
-           "FromNode": np.random.randint(1, 100, 1000) ,
-           "ToNode": np.random.randint(1, 100, 1000) ,
-       }
-   )
+cat = subprocess.Popen(["hadoop", "fs", "-cat", "/graphs/web-Google.txt"], stdout=subprocess.PIPE)
+lines = [tuple(line.decode().strip().split('\t')) for line in cat.stdout if not line.startswith('#'.encode())]
+lines = [{'FromNode': t[0], 'ToNode': t[1]} for t in lines]
+print(lines[0])
+
+ds = ray.data.from_items(
+   lines
 )
 
 def find_incoming_edges(group):
