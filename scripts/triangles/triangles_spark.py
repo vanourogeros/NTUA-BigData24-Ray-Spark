@@ -1,57 +1,77 @@
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
-from graphframes import *
-from sparkmeasure import TaskMetrics
+from sparkmeasure import TaskMetrics, StageMetrics
+from pyspark.sql.functions import col, sum, count, split
+from pyspark.sql.types import StructType, StructField, StringType
 import os
 import sys
+import time
+from graphframes import *
+
 os.environ['PYSPARK_PYTHON'] = sys.executable
 os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
 
-# Initialize Spark
 sparky = SparkSession \
     .builder \
     .appName("triangle counting") \
     .master("yarn") \
+    .config("spark.executor.instances", sys.argv[1]) \
     .config("spark.jars.packages", "ch.cern.sparkmeasure:spark-measure_2.12:0.23,graphframes:graphframes:0.8.3-spark3.5-s_2.12") \
     .getOrCreate() \
 
 sc = sparky.sparkContext
 
-taskmetrics = TaskMetrics(sparky)
+stagemetrics = StageMetrics(sparky)
+stagemetrics.begin()
 
-# Define a simple graph (replace this with your graph data)
-vertices = sparky.createDataFrame([
-    (1, "A"),
-    (2, "B"),
-    (3, "C"),
-    (4, "D"),
-    (5, "E")
-], ["id", "name"])
+# Define the schema for the TSV file
+schema = StructType([
+    StructField("src", StringType(), True),
+    StructField("dst", StringType(), True)
+])
 
-edges = sparky.createDataFrame([
-    (1, 2),
-    (2, 3),
-    (3, 1),
-    (3, 4),
-    (4, 5),
-    (5, 3)
-], ["src", "dst"])
+# Read the TSV file into a DataFrame
+edges_df = sparky.read.format("csv") \
+    .option("header", "false") \
+    .option("comment", "#") \
+    .option("delimiter", "\t") \
+    .schema(schema) \
+    .load("hdfs://okeanos-master:54310/graphs/web-Google.txt")
 
-print(edges)
-# Create a GraphFrame
-graph = GraphFrame(vertices, edges)
+#
+vertices_df = edges_df \
+              .select("src") \
+              .union(edges_df.select("dst")) \
+              .distinct() \
+              .withColumnRenamed('src', 'id') \
+              #.withColumn('name', col('id').cast('string'))
 
-# Triangle counting using GraphFrames
 
-taskmetrics.begin()
+#edges_df.show()
+#vertices_df.show()
 
-triangles = graph.triangleCount().show()
+graph=GraphFrame(vertices_df,edges_df)
 
-taskmetrics.end()
-taskmetrics.print_report()
+# Compute the number of triangles in the graph
+triangle_count = graph.triangleCount().count()
 
-# Display the triangle count
-#triangles.show()
+print(f"Number of triangles in the graph: {triangle_count}")
 
+
+stagemetrics.end()
+stagemetrics.print_report()
+print(stagemetrics.aggregate_stagemetrics())
+
+# memory report needs a bit of time to run...
+patience = 20
+while patience > 0:
+    try:
+        stagemetrics.print_memory_report()
+        patience = -1
+    except:
+        print("memory report not ready")
+        time.sleep(1)
+        patience -= 1
+print("memory report never ready :(")
 # Stop Spark
 sc.stop()
