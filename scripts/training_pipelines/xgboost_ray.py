@@ -28,7 +28,7 @@ ds = ds.add_column("new_feature", lambda df: df["feature_1"] ** 2 + df["feature_
         .select_columns(["feature_1", "feature_2", "feature_3", "new_feature", "label"])
 
 
-encoder = LabelEncoder()
+
 
 # Preprocess the data for training
 preprocessor = Concatenator(output_column_name="features", exclude=["label"])
