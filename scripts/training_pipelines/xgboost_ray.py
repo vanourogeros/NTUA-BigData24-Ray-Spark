@@ -29,9 +29,7 @@ ds = ds.add_column("new_feature", lambda df: df["feature_1"] ** 2 + df["feature_
 
 
 encoder = LabelEncoder()
-ds = ds.map_batches(lambda df: df.assign(word=encoder.fit_transform(df["word"])), batch_format="pandas")
 
-ds = ds.map_batches(lambda df: df.astype({"categorical_feature_1": "category", "categorical_feature_2": "category", "word": "category"}), batch_format="pandas")
 # Preprocess the data for training
 preprocessor = Concatenator(output_column_name="features", exclude=["label"])
 
@@ -61,7 +59,6 @@ trainer = XGBoostTrainer(
         # uncomment this and set `use_gpu=True` to use GPU for training
         # "tree_method": "gpu_hist",
         "eval_metric": ["logloss", "error"],
-        "enable_categorical": True,
     },
     datasets={"train": train_ds, "valid": val_ds},
     # If running in a multi-node cluster, this is where you
