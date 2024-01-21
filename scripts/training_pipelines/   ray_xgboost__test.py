@@ -7,7 +7,6 @@ import torch.nn as nn
 from ray.data.preprocessors import MinMaxScaler, Concatenator
 import torch
 import torch.optim as optim
-from ray.train import ScalingConfig
 import time
 from sklearn.preprocessing import LabelEncoder
 
