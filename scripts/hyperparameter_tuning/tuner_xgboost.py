@@ -72,7 +72,7 @@ if __name__ == "__main__":
         "eta": tune.loguniform(1e-4, 1e-1),
     }
        scheduler = ASHAScheduler(
-        max_t=10, grace_period=1, reduction_factor=2  # 10 training iterations
+        max_t=10, grace_period=3  # 10 training iterations
     )
 
     tuner = tune.Tuner(
@@ -84,7 +84,7 @@ if __name__ == "__main__":
             metric="eval-logloss",
             mode="min",
             scheduler=scheduler,
-            num_samples= 10,
+            num_samples= 4,
         ),
         param_space=search_space,
         datasets={"train": train_ds, "valid": val_ds},
