@@ -76,7 +76,10 @@ if __name__ == "__main__":
     )
 
     tuner = tune.Tuner(
-        train,
+        tune.with_resources(
+            tune.with_parameters(train),
+            resources={"cpu": 4, "gpu": 0}
+        ),
         tune_config=tune.TuneConfig(
             metric="eval-logloss",
             mode="min",
