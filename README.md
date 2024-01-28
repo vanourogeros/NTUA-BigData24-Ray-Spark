@@ -20,7 +20,7 @@ After the HDFS installation, simply run `start-dfs`, `start-yarn.sh` and `$SPARK
 
 Starting the cluster on the head node:
 
-`RAY_GRAFANA_IFRAME_HOST=http://[public-ip]:3000 CLASSPATH=`$HADOOP_HOME/bin/hdfs classpath --glob` ray start --head --node-ip-address=[head-node-address] --port=6379 --dashboard-host=0.0.0.0`
+`RAY_GRAFANA_IFRAME_HOST=http://[public-ip]:3000 CLASSPATH=``$HADOOP_HOME/bin/hdfs classpath --glob`` ray start --head --node-ip-address=[head-node-address] --port=6379 --dashboard-host=0.0.0.0`
 
 Connecting the two workers:
 
