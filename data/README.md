@@ -30,3 +30,16 @@ We also used generated Small-World graphs using the Watts-Strogatz model with th
 python generate_graph.py 10000 # Generate a small world graph with 10000 nodes (it will also have 1.000.000 edges)
 hdfs dfs -put graph.tsv /graphs/10000.txt
 ```
+
+## Speech Emotion Recognition (RAVDESS Dataset)
+
+Kaggle API needs to be installed
+```bash
+pip install kaggle
+```
+
+And an API token from your kaggle account put in `/.kaggle/kaggle.json`. Then you can download the dataset and unzip it with
+```bash
+kaggle datasets download uwrfkaggler/ravdess-emotional-speech-audio –path /data/ravdess –unzip
+```
+Then put the dataset in the HDFS with `hdfs -put` for it to be accessible from all nodes.
