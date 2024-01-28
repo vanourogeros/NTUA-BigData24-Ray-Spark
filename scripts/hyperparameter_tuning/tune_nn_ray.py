@@ -117,35 +117,13 @@ def train_func(config):
         ray.train.report(metrics={"accuracy": accuracy, "loss":loss})
 
 
-
-# trainer = TorchTrainer(
-#     train_func,
-#     datasets={"train": train_ds, "val": val_ds},
-#     train_loop_config={"epochs": 10},
-#     scaling_config=ScalingConfig(num_workers=3, use_gpu=False)
-# )
-
-# result = trainer.fit()
-# print(f"Training result: {result}")
-
-# total_time = time.time() - start_time
-
-# print("Preprocessing Time:", preprocessing_time)
-# print("Total Time", total_time)
-# print(ds.stats())
-
-
-def main(num_samples=2, max_num_epochs=10):
+def main(num_samples=4, max_num_epochs=10):
     config = {
         "epochs": 10,
-        "batch_size": 512,#[512, 1024],
+        "batch_size": [512, 1024],
         "hidden_size": [128, 256],
-        "input_size": 4#[4 , 8]
+        "input_size": 4
     }
-    scheduler = ASHAScheduler(
-        max_t=max_num_epochs,
-        grace_period=1,
-        reduction_factor=2)
     
     tuner = tune.Tuner(
         tune.with_resources(
@@ -155,7 +133,6 @@ def main(num_samples=2, max_num_epochs=10):
         tune_config=tune.TuneConfig(
             metric="loss",
             mode="min",
-            scheduler=scheduler,
             num_samples=num_samples,
         ),
         param_space=config,
@@ -169,4 +146,4 @@ def main(num_samples=2, max_num_epochs=10):
     print("Best trial final validation accuracy: {}".format(
         best_result.metrics["accuracy"]))
 
-main(num_samples=2, max_num_epochs=10)
+main(num_samples=4, max_num_epochs=10)
