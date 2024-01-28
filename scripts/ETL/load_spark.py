@@ -25,7 +25,7 @@ stagemetrics.begin()
 df = sparky.read.format("csv") \
            .option("header", "true") \
            .option("inferSchema", "true") \
-           .load("hdfs://okeanos-master:54310/data/generated_data.csv").collect()
+           .load("hdfs://okeanos-master:54310" + sys.argv[2]).collect()
 
 stagemetrics.end()
 stagemetrics.print_report()
