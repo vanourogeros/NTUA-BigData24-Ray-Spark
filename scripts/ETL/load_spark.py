@@ -12,6 +12,7 @@ sparky = SparkSession \
     .builder \
     .appName("load_data") \
     .master("yarn") \
+    .config("spark.executor.instances", sys.argv[1]) \
     .config("spark.jars.packages", "ch.cern.sparkmeasure:spark-measure_2.12:0.23") \
     .getOrCreate() \
 
