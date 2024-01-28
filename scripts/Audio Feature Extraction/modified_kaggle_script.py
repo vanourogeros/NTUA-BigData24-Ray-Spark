@@ -1,35 +1,11 @@
+from hdfs import InsecureClient
 import pandas as pd
 import numpy as np
-
-import os
-import sys
-
-# librosa is a Python library for analyzing audio and music. It can be used to extract the data from the audio files we will see it later.
 import librosa
-import librosa.display
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.metrics import confusion_matrix, classification_report
-from sklearn.model_selection import train_test_split
-
-# to play the audio files
-import IPython.display as ipd
-from IPython.display import Audio
-import keras
-from keras.preprocessing import sequence
-from keras.models import Sequential
-from keras.layers import Dense, Embedding
-from keras.layers import LSTM,BatchNormalization , GRU
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.utils import to_categorical
-from keras.layers import Input, Flatten, Dropout, Activation
-from keras.layers import Conv1D, MaxPooling1D, AveragePooling1D
-from keras.models import Model
-from keras.callbacks import ModelCheckpoint
-from tensorflow.keras.optimizers import SGD
+import sys
+import warnings
+import time
+from pyarrow import fs
 
 
 
@@ -39,10 +15,29 @@ if not sys.warnoptions:
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
+def list_hdfs_files(hdfs_url, hdfs_directory):
+    """
+    Lists files in an HDFS directory.
+
+    Args:
+        hdfs_url (str): The HDFS URL (e.g., 'hdfs://localhost:9000').
+        hdfs_directory (str): The path to the HDFS directory.
+
+    Returns:
+        list: A list of file names in the specified HDFS directory.
+    """
+    client = InsecureClient(hdfs_url)
+    files = client.list(hdfs_directory)
+    return files
+
+hdfs_url = 'http://okeanos-master:9870'
+hdfs_directory = '/data/ravdess'
+
 # path to the directory
-RAVD = "/kaggle/input/ravdess-emotional-speech-audio/audio_speech_actors_01-24/"
-dirl_list = os.listdir(RAVD)
+RAVD = '/data/ravdess/audio_speech_actors_01-24/'
+dirl_list = list_hdfs_files(hdfs_url, RAVD)
 dirl_list.sort()
+print(dirl_list)
 
 emotion = []
 gender = []
@@ -60,6 +55,7 @@ for i in dirl_list:
         gender.append(temp)
         path.append(RAVD + i + '/' + f)
 
+hdfs_fs = fs.HadoopFileSystem.from_uri("hdfs://okeanos-master:54310")
         
 RAVD_df = pd.DataFrame(emotion)
 RAVD_df = RAVD_df.replace({1:'neutral', 2:'neutral', 3:'happy', 4:'sad', 5:'angry', 6:'fear', 7:'disgust', 8:'surprise'})
@@ -89,8 +85,6 @@ def pitch(data, sampling_rate, pitch_factor=0.7):
     return librosa.effects.pitch_shift(data, sampling_rate, pitch_factor)
 
 
-import ray
-
 def feat_ext(data):
     mfcc = np.mean(librosa.feature.mfcc(y=data, sr=sample_rate).T, axis=0)
     return mfcc
@@ -119,14 +113,7 @@ for path, emotion in zip(RAVD_df['path'], RAVD_df['labels']):
     X.append(feature)
     Y.append(emotion)
 
-
-
-
 Emotions = pd.DataFrame(X)
 Emotions['labels'] = Y
 Emotions.to_csv('emotion.csv', index=False)
-Emotions.head()
-
-# can use this directly from saved feature .csv file
-Emotions = pd.read_csv('./emotion.csv')
 Emotions.head()
