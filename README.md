@@ -12,6 +12,8 @@
 
 ## HDFS Installation 
 
+https://colab.research.google.com/drive/1pjf3Q6T-Ak2gXzbgoPpvMdfOHd1GqHZG?usp=sharing
+
 ## Spark Setup 
 
 After the HDFS installation, simply run `start-dfs`, `start-yarn.sh` and `$SPARK_HOME/sbin/start-history-server.sh` on the head node to setup for the Spark scripts execution.
@@ -24,4 +26,4 @@ Starting the cluster on the head node:
 
 Connecting the two workers:
 
-`CLASSPATH=`$HADOOP_HOME/bin/hdfs classpath --glob` ray start --address=[head-node-address]`
+`CLASSPATH=``$HADOOP_HOME/bin/hdfs classpath --glob`` ray start --address=[head-node-address]`
