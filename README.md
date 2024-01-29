@@ -10,13 +10,19 @@
 >pyspark==3.3.2 <br>
 >torch==2.1.2 <br>
 
+Install Ray's necessary packages with:
+
+`pip install ray[core,data,train,tune]`
+
 ## HDFS Installation 
+
+In order to set up the Okeanos-Knossos Virtual Machines and install Apache Hadoop, YARN and Spark environment we followed the guide linked below:
 
 https://colab.research.google.com/drive/1pjf3Q6T-Ak2gXzbgoPpvMdfOHd1GqHZG?usp=sharing
 
 ## Spark Setup 
 
-After the HDFS installation, simply run `start-dfs`, `start-yarn.sh` and `$SPARK_HOME/sbin/start-history-server.sh` on the head node to setup for the Spark scripts execution.
+After completing the HDFS installation, simply run `start-dfs`, `start-yarn.sh` and `$SPARK_HOME/sbin/start-history-server.sh` on the head node to setup for the Spark scripts execution.
 
 ## Ray Setup 
 
@@ -27,3 +33,6 @@ Starting the cluster on the head node:
 Connecting the two workers:
 
 `CLASSPATH=``$HADOOP_HOME/bin/hdfs classpath --glob`` ray start --address=[head-node-address]`
+
+For configuring the Ray Dashboard and embedding Grafana and Prometheus for metrics and visualizations follow the instructions provided on the link : https://docs.ray.io/en/latest/cluster/configure-manage-dashboard.html
+
