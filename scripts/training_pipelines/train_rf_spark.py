@@ -1,6 +1,7 @@
-from pyspark import SparkConf, SparkContext
+from pyspark.ml.classification import RandomForestClassifier
+from pyspark.ml.feature import IndexToString, StringIndexer, VectorIndexer
 from pyspark.sql import SparkSession
-from pyspark.ml.classification import MultilayerPerceptronClassifier
+from pyspark import SparkConf, SparkContext
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 from sparkmeasure import TaskMetrics, StageMetrics
 from pyspark.sql.functions import col, sqrt, length
@@ -8,10 +9,10 @@ from pyspark.ml.feature import MinMaxScaler
 from pyspark.ml.torch.distributor import TorchDistributor
 from pyspark.ml import Pipeline
 from pyspark.ml.feature import VectorAssembler
-from xgboost.spark import SparkXGBClassifier
 import os
 import sys
 import time
+
 os.environ['PYSPARK_PYTHON'] = sys.executable
 os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
 
@@ -19,9 +20,9 @@ os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
 # Initialize Spark
 sparky = SparkSession \
     .builder \
-    .appName("load_data") \
+    .appName("xgboost_spark") \
     .master("yarn") \
-    .config("spark.executor.instances", "3") \
+    .config("spark.executor.instances", sys.argv[1])\
     .config("spark.executor.cores", "4") \
     .config("spark.jars.packages", "ch.cern.sparkmeasure:spark-measure_2.12:0.23") \
     .getOrCreate() 
@@ -35,7 +36,7 @@ stagemetrics.begin()
 df = sparky.read.format("csv") \
            .option("header", "true") \
            .option("inferSchema", "true") \
-           .load("hdfs://okeanos-master:54310"+"/data/large")
+           .load([f"hdfs://okeanos-master:54310/data/large/dataset{i}.csv" for i in [1,7]])
 
 start_time = time.time()
 
@@ -51,31 +52,42 @@ assembler = VectorAssembler(inputCols=["feature_1", "feature_2", "feature_3", "n
 scaler = MinMaxScaler(inputCol="input", outputCol="features")
 pipeline = Pipeline(stages=[assembler, scaler])
 scalerModel = pipeline.fit(df)
-scaledData = scalerModel.transform(df)
+scaledData = scalerModel.transform(df).select(["features", "label"])
 
-scaledData = scaledData.select(scaledData.features, scaledData.label)
-# Rename the sliced_features column to feature_1, feature_2, feature_3
+#scaledData.show()
 
-
-
-train_df, val_df = scaledData.randomSplit (weights= [0.7,0.3], seed=100)
-
+trainingData, testData = scaledData.randomSplit(weights= [0.7,0.3], seed=100)
+#trainingData.show()
 preprocessing_time = time.time() - start_time
+# Train a GBT model.
+print("Preproccessing Time:", preprocessing_time)
+rf = RandomForestClassifier(labelCol="label", featuresCol="features", numTrees=5)
 
+# Chain indexers and GBT in a Pipeline
+#labelConverter = IndexToString(inputCol="prediction", outputCol="predictedLabel",
+                            #labels=labelIndexer.labels)
 
-layers = [4, 128, 2]
-# create the trainer and set its parameters
-trainer = SparkXGBClassifier(
-  features_col="features",
-  label_col="label",
-  num_workers=3,
-)
-model = trainer.fit(train_df)
-result = model.transform(val_df)
-predictionAndLabels = result.select("prediction", "label")
-evaluator = MulticlassClassificationEvaluator(metricName="accuracy")
-print("Test set accuracy = " + str(evaluator.evaluate(predictionAndLabels)))
+# Chain indexers and forest in a Pipeline
+pipeline = Pipeline(stages=[ rf])
 
+# Train model.  This also runs the indexers.
+model = pipeline.fit(trainingData)
+
+# Make predictions.
+predictions = model.transform(testData)
+
+# Select example rows to display.
+#predictions.select("prediction", "label", "features").show(5)
+
+# Select (prediction, true label) and compute test error
+evaluator = MulticlassClassificationEvaluator(
+    labelCol="label", predictionCol="prediction", metricName="accuracy")
+accuracy = evaluator.evaluate(predictions)
+print("Test Error = %g" % (1.0 - accuracy))
+
+gbtModel = model.stages[0]
+print(gbtModel)  # summary only
+# $example off$
 total_time = time.time() - start_time
 stagemetrics.end()
 stagemetrics.print_report()
@@ -96,9 +108,8 @@ if patience == 0:
     print("memory report was never ready :(")
 
 # Stop Spark
-model.save("/tmp/xgboost-pyspark-model")
-
 sc.stop()
 
 print("Preproccessing Time:", preprocessing_time)
 print("Total Time:", total_time)
+
