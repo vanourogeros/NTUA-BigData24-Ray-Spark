@@ -19,6 +19,13 @@ Tasks found in the scripts folder include (all implemented with both Ray and Spa
 
 In the `data` folder there are scripts for the data generation and retrieval (for real-world data) process.
 
+To run any script in the `scripts` folder after setting up the systems, run 
+```bash
+CLASSPATH=`$HADOOP_HOME/bin/hdfs classpath --glob` python script.py <arguments>
+```
+see the READMEs in the `scripts` directories for details on the arguments. The CLASSPATH environment variable needs to be set when `pyarrow` needs to 
+communicate with the HDFS (else it makes a whole thing about the CLASSPATH not being set).
+
 Our report contains the results of experiments on those scripts to test Ray and Spark's performance and scalability with workers and data.
 For many experiments, we use datasets of sizes of over 2, 4, and 8GB on a cluster of 3 machines with 4 CPUs and 8GB RAM (Testing for cases where the dataset does not fit into main memory)
 
