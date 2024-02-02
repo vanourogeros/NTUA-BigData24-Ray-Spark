@@ -13,6 +13,7 @@ e.g:
 
 The python script writes to stdout in the form of a stream, so the bash script redirects that output into the hdfs file with the command
 ```bash
+# "$NUM_SAMPLES" and "$HDFS_DATA_PATH" are given by the user
 python generate_data_stdout.py "$NUM_SAMPLES" | hdfs dfs -put - "$HDFS_DATA_PATH"
 ```
 
@@ -40,6 +41,6 @@ pip install kaggle
 
 And an API token from your kaggle account put in `/.kaggle/kaggle.json`. Then you can download the dataset and unzip it with
 ```bash
-kaggle datasets download uwrfkaggler/ravdess-emotional-speech-audio –path /data/ravdess –unzip
+kaggle datasets download uwrfkaggler/ravdess-emotional-speech-audio –path ./data/ravdess –unzip
 ```
 Then put the dataset in the HDFS with `hdfs -put` for it to be accessible from all nodes.
